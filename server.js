@@ -4,7 +4,7 @@ app.use(express.json());
 
 // Mock Database (In-memory array)
 let notes = [
-    { id: 1, title: "First Note", content: "Hello from Notes API" }
+    { id: 1, title: "First Note", content: "Hello from JYOTI OLI to Paras Oli paglooo" }
 ];
 let nextId = 2; // Naye notes ko ID dene ke liye tracker
 
