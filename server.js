@@ -1,5 +1,10 @@
+require('dotenv').config(); // This loads the .env file
+
 const express = require('express');
 const app = express();
+
+// Use the hidden variable!
+const PORT = process.env.PORT || 5000;
 app.use(express.json());
 
 // Mock Database (In-memory array)
@@ -54,7 +59,7 @@ app.delete('/notes/:id', (req, res) => {
 // ==========================================
 
 // Server ko port 3000 par start karna
-const PORT = 3000;
+
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
