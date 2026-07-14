@@ -1,65 +1,137 @@
-require('dotenv').config(); // This loads the .env file
-
+const dotenvResult = require('dotenv').config();
 const express = require('express');
-const app = express();
+const mongoose = require('mongoose');
 
-// Use the hidden variable!
-const PORT = process.env.PORT || 5000;
+const app = express();
 app.use(express.json());
 
-// Mock Database (In-memory array)
-let notes = [
-    { id: 1, title: "First Note", content: "Hello from JYOTI OLI to Paras Oli paglooo" }
-];
-let nextId = 2; // Naye notes ko ID dene ke liye tracker
+const Note = require('./models/note');
 
-// ==========================================
-// ROUTES
-// ==========================================
+if (dotenvResult.error) {
+    console.error('Failed to load .env file:', dotenvResult.error.message);
+}
 
-// 1. GET: Fetch all notes
-app.get('/notes', (req, res) => {
-    res.json(notes);
+const mongoUri = process.env.MONGO_URI;
+
+if (!mongoUri) {
+    throw new Error('MONGO_URI is missing. Check your .env file.');
+}
+
+const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+    res.status(200).send(`
+        <html>
+            <head>
+                <title>Notes API</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 0; padding: 40px; background: #f7f7fb; color: #1f2937; }
+                    .card { max-width: 720px; margin: 0 auto; background: white; border-radius: 16px; padding: 32px; box-shadow: 0 12px 30px rgba(0,0,0,0.08); }
+                    h1 { margin-top: 0; }
+                    code { background: #eef2ff; padding: 2px 6px; border-radius: 6px; }
+                </style>
+            </head>
+            <body>
+                <div class="card">
+                    <h1>Notes API</h1>
+                    <p>The API is running and connected to MongoDB.</p>
+                    <p>Available endpoints:</p>
+                    <ul>
+                        <li><code>GET /notes</code></li>
+                        <li><code>POST /notes</code></li>
+                        <li><code>PUT /notes/:id</code></li>
+                        <li><code>DELETE /notes/:id</code></li>
+                    </ul>
+                </div>
+            </body>
+        </html>
+    `);
 });
 
-// 2. POST: Create a new note
-app.post('/notes', (req, res) => {
-    const newNote = {
-        id: nextId++, 
-        title: req.body.title,
-        content: req.body.content
-    };
-    notes.push(newNote);
-    res.status(201).json(newNote);
-});
-
-// 3. PUT: Update an existing note by ID
-app.put('/notes/:id', (req, res) => {
-    const noteId = parseInt(req.params.id);
-    const note = notes.find(n => n.id === noteId);
-
-    if (!note) {
-        return res.status(404).json({ message: "Note not found" });
+app.get('/notes', async (req, res) => {
+    try {
+        const notes = await Note.find().sort({ createdAt: -1 });
+        res.status(200).json(notes);
+    } catch (error) {
+        res.status(500).json({ message: 'Notes fetch nahi hue', error: error.message });
     }
-
-    note.title = req.body.title || note.title;
-    note.content = req.body.content || note.content;
-    res.json(note);
 });
 
-// 4. DELETE: Remove a note by ID
-app.delete('/notes/:id', (req, res) => {
-    const noteId = parseInt(req.params.id);
-    notes = notes.filter(n => n.id !== noteId);
-    res.json({ message: "Note deleted successfully" });
+app.post('/notes', async (req, res) => {
+    try {
+        const newNote = await Note.create({
+            title: req.body.title,
+            content: req.body.content,
+        });
+
+        res.status(201).json(newNote);
+    } catch (error) {
+        res.status(500).json({ message: 'Note save nahi hua', error: error.message });
+    }
 });
 
-// ==========================================
-// SERVER START
-// ==========================================
+app.put('/notes/:id', async (req, res) => {
+    try {
+        const updatedNote = await Note.findByIdAndUpdate(
+            req.params.id,
+            {
+                title: req.body.title,
+                content: req.body.content,
+            },
+            { new: true, runValidators: true }
+        );
 
-// Server ko port 3000 par start karna
+        if (!updatedNote) {
+            return res.status(404).json({ message: 'Note not found' });
+        }
 
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+        res.status(200).json(updatedNote);
+    } catch (error) {
+        res.status(500).json({ message: 'Update fail ho gaya', error: error.message });
+    }
 });
+
+app.delete('/notes/:id', async (req, res) => {
+    try {
+        const deletedNote = await Note.findByIdAndDelete(req.params.id);
+
+        if (!deletedNote) {
+            return res.status(404).json({ message: 'Note not found' });
+        }
+
+        res.status(200).json({ message: 'Note deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Delete fail ho gaya', error: error.message });
+    }
+});
+
+app.use('/api', (req, res) => {
+    res.status(404).json({
+        message: 'API route not found',
+        path: req.originalUrl,
+    });
+});
+
+app.use((req, res) => {
+    res.status(404).send(`
+        <div style="text-align: center; margin-top: 50px; font-family: Arial, sans-serif;">
+            <h1 style="color: #dc2626;">404</h1>
+            <h2>Page not found</h2>
+            <p>The page you requested does not exist. Go back to <a href="/">Home</a>.</p>
+        </div>
+    `);
+});
+
+async function startServer() {
+    try {
+        await mongoose.connect(mongoUri);
+        app.listen(PORT, () => {
+            console.log(`Server is running on http://localhost:${PORT}`);
+        });
+    } catch (error) {
+        console.error('MongoDB connection error:', error.message);
+        process.exit(1);
+    }
+}
+
+startServer();
