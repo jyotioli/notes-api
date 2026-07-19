@@ -5,19 +5,17 @@ const { SecretsManagerClient, GetSecretValueCommand } = require("@aws-sdk/client
 const app = express();
 app.use(express.json());
 
-const Note = require('./models/note');
+const Note = require('../models/note.js');
 
 /*if (dotenvResult.error) {
     console.error('Failed to load .env file:', dotenvResult.error.message);
 }*/
 
-//const mongoUri = process.env.MONGO_URI; NO NEED FOR THIS AS NOW WE CONNECTED TO AWS SECRETS MANAGER MANAGER 
-
-
-const { SecretsManagerClient, GetSecretValueCommand } = require("@aws-sdk/client-secrets-manager");
+//const mongoUri = process.env.MONGO_URI; NO NEED FOR THIS AS NOW WE CONNECTED TO AWS SECRETS MANAGER MANAGER
 
 // Apna region wahi rakhein jahan aapne secret banaya hai (e.g., 'us-east-1')
 const client = new SecretsManagerClient({ region: "us-east-1" });
+let mongoUri = null;
 
 async function connectDB() {
     try {
@@ -28,22 +26,20 @@ async function connectDB() {
 
         // Secret ko string se wapas parse karna padega
         const secret = JSON.parse(response.SecretString);
-        const mongoUri = secret.MONGO_URI; 
+        mongoUri = secret.MONGO_URI;
+
+        if (!mongoUri) {
+            throw new Error('MONGO_URI is missing in the secret.');
+        }
 
         // Ab asli connection
         await mongoose.connect(mongoUri);
         console.log("MongoDB connected via AWS Secrets Manager! 🎉");
-
+        return mongoUri;
     } catch (error) {
         console.error("Secrets Manager se password laane mein error:", error);
-        process.exit(1);
+        throw error;
     }
-}
-
-connectDB();
-
-if (!mongoUri) {
-    throw new Error('MONGO_URI is missing. Check your .env file.');
 }
 
 const PORT = process.env.PORT || 3000;
@@ -52,7 +48,7 @@ app.get('/', (req, res) => {
     res.status(200).send(`
         <html>
             <head>
-                <title>Notes API</title>
+                <title>Notes API with AWS Secrets Manager</title>
                 <style>
                     body { font-family: Arial, sans-serif; margin: 0; padding: 40px; background: #f7f7fb; color: #1f2937; }
                     .card { max-width: 720px; margin: 0 auto; background: white; border-radius: 16px; padding: 32px; box-shadow: 0 12px 30px rgba(0,0,0,0.08); }
@@ -153,7 +149,7 @@ app.use((req, res) => {
 
 async function startServer() {
     try {
-        await mongoose.connect(mongoUri);
+        await connectDB();
         app.listen(PORT, () => {
             console.log(`Server is running on http://localhost:${PORT}`);
         });
