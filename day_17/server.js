@@ -1,16 +1,11 @@
 //const dotenvResult = require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors'); //new line added for CORS support
 const { SecretsManagerClient, GetSecretValueCommand } = require("@aws-sdk/client-secrets-manager");
 const app = express();
-// Middleware
-app.use(cors()); // Nayi line - Yeh sabhi domains ko API access karne ki permission dega
 app.use(express.json());
 
-
 const Note = require('../models/note.js');
-
 
 /*if (dotenvResult.error) {
     console.error('Failed to load .env file:', dotenvResult.error.message);
@@ -47,7 +42,7 @@ async function connectDB() {
     }
 }
 
-// const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
     res.status(200).send(`
