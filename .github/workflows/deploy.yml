@@ -20,3 +20,5 @@ jobs:
             docker stop api-node22 || true
             docker rm api-node22 || true
             docker run -d -p 3000:3000 --name api-node22 notes-api-image
+
+# Re-triggering pipeline
