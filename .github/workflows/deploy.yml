@@ -19,7 +19,7 @@ jobs:
             docker build -t notes-api-image .
             docker stop api-node22 || true
             docker rm api-node22 || true
-            docker run -d -p 3000:3000 --name api-node22 notes-api-image
+            docker run -d -p 3000:3000 --env-file .env --name api-node22 notes-api-image
 
 # Re-triggering pipeline
 #lets see now
