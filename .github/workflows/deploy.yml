@@ -2,11 +2,13 @@ name: Deploy to EC2
 on:
   push:
     branches: [main]
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@master
         with:
@@ -14,12 +16,35 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            set -e
             cd ~/notes-api
             git pull origin main
+
+
+            export MONGO_URI=$(aws secretsmanager get-secret-value \
+              --secret-id prod/notesapi/dburl \
+              --query SecretString --output text \
+              --region us-east-1)
+
+            if [ -z "$MONGO_URI" ]; then
+              echo "ERROR: MONGO_URI could not be fetched from Secrets Manager"
+              exit 1
+            fi
+
             docker build -t notes-api-image .
+
             docker stop api-node22 || true
             docker rm api-node22 || true
-            docker run -d -p 3000:3000 --name api-node22 notes-api-image
+
+            docker run -d \
+              -p 3000:3000 \
+              -e MONGO_URI="$MONGO_URI" \
+              --name api-node22 \
+              --restart unless-stopped \
+              notes-api-image
+
+            sleep 5
+            docker ps --filter "name=api-node22" --filter "status=running" | grep api-node22
 
 # Re-triggering pipeline
 #lets see now
