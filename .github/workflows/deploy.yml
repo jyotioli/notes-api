@@ -47,4 +47,3 @@ jobs:
             docker ps --filter "name=api-node22" --filter "status=running" | grep api-node22
 
 # Re-triggering pipeline
-#lets see now
