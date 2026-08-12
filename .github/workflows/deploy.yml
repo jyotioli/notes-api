@@ -20,13 +20,12 @@ jobs:
             cd ~/notes-api
             git pull origin main
 
-
             export MONGO_URI=$(aws secretsmanager get-secret-value \
               --secret-id prod/notesapi/dburl \
               --query SecretString --output text \
-              --region us-east-1)
+              --region us-east-1 | jq -r '.MONGO_URI')
 
-            if [ -z "$MONGO_URI" ]; then
+            if [ -z "$MONGO_URI" ] || [ "$MONGO_URI" == "null" ]; then
               echo "ERROR: MONGO_URI could not be fetched from Secrets Manager"
               exit 1
             fi
@@ -45,5 +44,3 @@ jobs:
 
             sleep 5
             docker ps --filter "name=api-node22" --filter "status=running" | grep api-node22
-
-# Re-triggering pipeline
