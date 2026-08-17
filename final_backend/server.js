@@ -13,7 +13,9 @@ const app = express();
 // 2. MIDDLEWARE (The Security & Data Translators)
 app.use(
   cors({
-    origin: ["http://localhost:3000"], // Allows your local React app to talk to this server
+    origin: [
+      "http://oli-notes-frontend-2026.s3-website-us-east-1.amazonaws.com",
+    ], // Allows your local React app to talk to this server
     methods: ["GET", "POST", "PUT", "DELETE"],
   }),
 );
