@@ -18,7 +18,7 @@ jobs:
           script: |
             set -e
             cd ~/notes-api
-            git pull origin master
+            git pull origin main
 
             export MONGO_URI=$(aws secretsmanager get-secret-value \
               --secret-id prod/notesapi/dburl \
