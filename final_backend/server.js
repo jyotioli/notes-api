@@ -11,14 +11,16 @@ const {
 const app = express();
 
 // 2. MIDDLEWARE (The Security & Data Translators)
-app.use(
-  cors({
-    origin: [
-      "http://oli-notes-frontend-2026.s3-website-us-east-1.amazonaws.com",
-    ], // Allows your local React app to talk to this server
-    methods: ["GET", "POST", "PUT", "DELETE"],
-  }),
-);
+// app.use(
+//   cors({
+//     origin: [
+//       "http://oli-notes-frontend-2026.s3-website-us-east-1.amazonaws.com",
+//     ], // Allows your local React app to talk to this server
+//     methods: ["GET", "POST", "PUT", "DELETE"],
+//   }),
+// );
+
+app.use(cors());
 app.use(express.json()); // Tells the server to understand JSON data from the frontend
 
 const Note = require("../models/note.js");
