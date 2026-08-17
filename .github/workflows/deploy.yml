@@ -16,6 +16,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            git status
             set -e
             cd ~/notes-api
             git pull origin main
@@ -41,6 +42,6 @@ jobs:
               --name api-node22 \
               --restart unless-stopped \
               notes-api-image
-
+            git status
             sleep 5
             docker ps --filter "name=api-node22" --filter "status=running" | grep api-node22
