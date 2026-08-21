@@ -75,7 +75,7 @@ function ensureDbAvailable(req, res, next) {
   });
 }
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 // 4. THE MODEL (The Rules for a Note)
 // This tells MongoDB exactly what a "Note" should look like.

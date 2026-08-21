@@ -45,3 +45,5 @@ jobs:
             git status
             sleep 5
             docker ps --filter "name=api-node22" --filter "status=running" | grep api-node22
+
+#lets goo
